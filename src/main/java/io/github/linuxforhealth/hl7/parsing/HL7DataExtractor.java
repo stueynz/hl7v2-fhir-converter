@@ -335,7 +335,7 @@ public class HL7DataExtractor {
         try {
             return new Hl7ParsingStringResult(getTerser().get("/" + segment + "-" + field));
 
-        } catch (HL7Exception | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
+        } catch (HL7Exception | IllegalArgumentException | IndexOutOfBoundsException e) {
             LOGGER.debug("Cannot extract value for Segment {} field {}   ", segment, field, e);
             LOGGER.warn("Cannot extract value for Segment {} field {}, reason {}", segment, field,
                     e.getMessage());
