@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 public class HL7MessageModel implements MessageTemplate<Message> {
 
-    private List<FHIRResourceTemplate> resources;
+    private final List<FHIRResourceTemplate> resources;
     private String messageName;
     private static final Logger LOGGER = LoggerFactory.getLogger(HL7MessageModel.class);
 
@@ -49,9 +49,9 @@ public class HL7MessageModel implements MessageTemplate<Message> {
     private void handleException(Exception e) {
         StackTraceElement[] stackTrace = e.getStackTrace();
         StringBuilder classAndStack = new StringBuilder();
-        classAndStack.append(e.getClass() + "\n");
-        for (int i = 0; i < stackTrace.length; i++) {
-            classAndStack.append(stackTrace[i] + "\n");
+        classAndStack.append(e.getClass()).append("\n");
+        for (StackTraceElement stackTrace1 : stackTrace) {
+            classAndStack.append(stackTrace1).append("\n");
         }
         LOGGER.error("Error transforming HL7 message. {}", classAndStack);
     }

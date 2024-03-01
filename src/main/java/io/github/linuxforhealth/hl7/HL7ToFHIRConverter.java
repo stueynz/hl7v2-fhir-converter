@@ -40,7 +40,7 @@ import io.github.linuxforhealth.hl7.resource.ResourceReader;
  * @author pbhallam
  */
 public class HL7ToFHIRConverter {
-    private static HL7HapiParser hparser = new HL7HapiParser();
+    private static final HL7HapiParser hparser = new HL7HapiParser();
     private static final Logger LOGGER = LoggerFactory.getLogger(HL7ToFHIRConverter.class);
     private Map<String, HL7MessageModel> messagetemplates = new HashMap<>();
 
@@ -132,12 +132,10 @@ public class HL7ToFHIRConverter {
      * @throws UnsupportedOperationException - if message type is not supported
      */
     public Bundle convertToBundle(String hl7MessageData, ConverterOptions options, HL7MessageEngine engine) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(hl7MessageData),
-                "Input HL7 message cannot be blank");
+        Preconditions.checkArgument(StringUtils.isNotBlank(hl7MessageData), "Input HL7 message cannot be blank");
         if(engine == null) {
             engine = getMessageEngine(options);
         }
-
 
         Message hl7message = getHl7Message(hl7MessageData);
         if (hl7message != null) {
@@ -190,7 +188,7 @@ public class HL7ToFHIRConverter {
                     output.append("\n");
                 }
                 if (output.length() > 0) {
-                    LOGGER.info("HL7_MESSAGE_STRUCTURE=\n{}", output);
+                    LOGGER.debug("HL7_MESSAGE_STRUCTURE=\n{}", output);
                 }
             }
         } catch (HL7Exception e) {
