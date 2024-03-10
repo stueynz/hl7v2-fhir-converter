@@ -23,11 +23,12 @@ import io.github.linuxforhealth.core.Constants;
 public class ConverterOptions {
     public static final ConverterOptions SIMPLE_OPTIONS = new Builder().build();
 
-    private BundleType bundleType;
-    private boolean prettyPrint;
-    private boolean validateResource;
-    private String zoneIdText;
-    private HashMap<String, String> properties;
+    private final BundleType bundleType;
+    private final boolean prettyPrint;
+    private boolean printStructure = false;
+    private final boolean validateResource;
+    private final String zoneIdText;
+    private final HashMap<String, String> properties;
 
     private ConverterOptions(Builder builder) {
         if (builder.bundleType != null) {
@@ -38,12 +39,14 @@ public class ConverterOptions {
         this.zoneIdText = builder.zoneIdText;
         this.properties = builder.properties;
         this.prettyPrint = builder.prettyPrint;
+        this.printStructure = builder.printStructure;
         this.validateResource = builder.validateResource;
     }
 
     public static class Builder {
         private BundleType bundleType;
         private boolean prettyPrint;
+        private boolean printStructure = false;
         private boolean validateResource;
         private String zoneIdText;
         private HashMap<String, String> properties = new HashMap<>();
@@ -56,6 +59,11 @@ public class ConverterOptions {
 
         public Builder withPrettyPrint() {
             this.prettyPrint = true;
+            return this;
+        }
+        
+        public Builder withPrintStructure() {
+            this.printStructure = true;
             return this;
         }
 
@@ -89,6 +97,10 @@ public class ConverterOptions {
 
     public boolean isPrettyPrint() {
         return prettyPrint;
+    }
+    
+    public boolean isPrintStructure() {
+        return printStructure;
     }
 
     public boolean isValidateResource() {

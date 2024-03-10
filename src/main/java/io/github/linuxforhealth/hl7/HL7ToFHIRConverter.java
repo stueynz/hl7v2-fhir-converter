@@ -3,18 +3,15 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package io.github.linuxforhealth.hl7;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
@@ -24,7 +21,6 @@ import com.google.common.base.Preconditions;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
-import ca.uhn.hl7v2.util.Hl7InputStreamMessageStringIterator;
 import io.github.linuxforhealth.core.terminology.TerminologyLookup;
 import io.github.linuxforhealth.core.terminology.UrlLookup;
 import io.github.linuxforhealth.fhir.FHIRContext;
@@ -35,19 +31,23 @@ import io.github.linuxforhealth.hl7.parsing.HL7HapiParser;
 import io.github.linuxforhealth.hl7.resource.ResourceReader;
 
 /**
- * Converts HL7 message to FHIR bundle resource based on the customizable templates.
+ * Converts HL7 message to FHIR bundle resource based on the customizable
+ * templates.
  *
  * @author pbhallam
  */
 public class HL7ToFHIRConverter {
+
     private static final HL7HapiParser hparser = new HL7HapiParser();
     private static final Logger LOGGER = LoggerFactory.getLogger(HL7ToFHIRConverter.class);
     private Map<String, HL7MessageModel> messagetemplates = new HashMap<>();
 
     /**
-     * Constructor initialized all the templates used for converting the HL7 to FHIR bundle resource.
-     * 
-     * @throws IllegalStateException - If any issues are encountered when loading the templates.
+     * Constructor initialized all the templates used for converting the HL7 to
+     * FHIR bundle resource.
+     *
+     * @throws IllegalStateException - If any issues are encountered when
+     * loading the templates.
      */
     public HL7ToFHIRConverter() {
 
@@ -62,10 +62,11 @@ public class HL7ToFHIRConverter {
 
     /**
      * Converts the input HL7 file (.hl7) into FHIR bundle resource.
-     * 
+     *
      * @param hl7MessageFile - Single message only
-     * @return JSON representation of FHIR {@link Bundle} resource. If bundle type if not specified
-     *         then the default bundle type is used BundleType.COLLECTION
+     * @return JSON representation of FHIR {@link Bundle} resource. If bundle
+     * type if not specified then the default bundle type is used
+     * BundleType.COLLECTION
      * @throws IOException - if message file cannot be found
      * @throws UnsupportedOperationException - if message type is not supported
      * @throws IllegalArgumentException - if illegal arguments found
@@ -78,10 +79,10 @@ public class HL7ToFHIRConverter {
 
     /**
      * Converts the input HL7 file (.hl7) into FHIR bundle resource.
-     * 
+     *
      * @param hl7MessageFile File containing HL7 message to convert
      * @param options Options to use in conversion
-     * 
+     *
      * @return JSON representation of FHIR {@link Bundle} resource.
      * @throws IOException - if message file cannot be found
      * @throws UnsupportedOperationException - if message type is not supported
@@ -94,13 +95,13 @@ public class HL7ToFHIRConverter {
 
     /**
      * Converts the input HL7 message (String data) into FHIR bundle resource.
-     * 
+     *
      * @param hl7MessageData HL7 message to convert
-     * @return JSON representation of FHIR {@link Bundle} resource. If bundle type if not specified
-     *         then the default bundle type is used BundleType.COLLECTION
+     * @return JSON representation of FHIR {@link Bundle} resource. If bundle
+     * type if not specified then the default bundle type is used
+     * BundleType.COLLECTION
      * @throws UnsupportedOperationException - if message type is not supported
      */
-
     public String convert(String hl7MessageData) {
         return convert(hl7MessageData, ConverterOptions.SIMPLE_OPTIONS);
 
@@ -108,10 +109,10 @@ public class HL7ToFHIRConverter {
 
     /**
      * Converts the input HL7 message (String data) into FHIR bundle resource.
-     * 
+     *
      * @param hl7MessageData Message to convert
      * @param options Options for conversion
-     * 
+     *
      * @return JSON representation of FHIR {@link Bundle} resource.
      * @throws UnsupportedOperationException - if message type is not supported
      */
@@ -133,11 +134,11 @@ public class HL7ToFHIRConverter {
      */
     public Bundle convertToBundle(String hl7MessageData, ConverterOptions options, HL7MessageEngine engine) {
         Preconditions.checkArgument(StringUtils.isNotBlank(hl7MessageData), "Input HL7 message cannot be blank");
-        if(engine == null) {
+        if (engine == null) {
             engine = getMessageEngine(options);
         }
 
-        Message hl7message = getHl7Message(hl7MessageData);
+        Message hl7message = getHl7Message(hl7MessageData, options);
         if (hl7message != null) {
             String messageType = HL7DataExtractor.getMessageType(hl7message);
             HL7MessageModel hl7MessageTemplateModel = messagetemplates.get(messageType);
@@ -151,30 +152,23 @@ public class HL7ToFHIRConverter {
         }
     }
 
-    private HL7MessageEngine getMessageEngine(ConverterOptions options){
+    private HL7MessageEngine getMessageEngine(ConverterOptions options) {
         Preconditions.checkArgument(options != null, "options cannot be null.");
         FHIRContext context = new FHIRContext(options.isPrettyPrint(), options.isValidateResource(), options.getProperties(), options.getZoneIdText());
 
         return new HL7MessageEngine(context, options.getBundleType());
     }
 
-    private static Message getHl7Message(String data) {
+    private static Message getHl7Message(String data, ConverterOptions options) {
         Message hl7message = null;
-        try (InputStream ins = IOUtils.toInputStream(data, StandardCharsets.UTF_8)) {
-            Hl7InputStreamMessageStringIterator iterator = new Hl7InputStreamMessageStringIterator(ins);
-            // only supports single message conversion.
-            if (iterator.hasNext()) {
-
-                hl7message = hparser.getParser().parse(iterator.next());
-            }
+        try {
+            hl7message = hparser.getParser().parse(data);
         } catch (HL7Exception e) {
             throw new IllegalArgumentException("Cannot parse the message.", e);
-        } catch (IOException ioe) {
-            throw new IllegalArgumentException("IOException encountered.", ioe);
         }
 
         try {
-            if (hl7message != null) {
+            if (hl7message != null && options.isPrintStructure()) {
                 String messageStructureInfo = hl7message.printStructure();
                 StringBuilder output = new StringBuilder();
                 String[] messageStructureInfoLines = messageStructureInfo.split(System.getProperty("line.separator"));
